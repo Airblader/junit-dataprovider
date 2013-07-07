@@ -98,7 +98,7 @@ public class DataProviderFrameworkMethod extends FrameworkMethod {
     	} finally {
     		invokeExtendedDataProviderMethod("afterEach");
 
-    		if (getNumberOfRows() == 1 || getIndex() == getNumberOfRows()) {
+    		if (getNumberOfRows() == 1 || getIndex() >= getNumberOfRows()) {
     			invokeExtendedDataProviderMethod("afterAll");
     		}
     	}
