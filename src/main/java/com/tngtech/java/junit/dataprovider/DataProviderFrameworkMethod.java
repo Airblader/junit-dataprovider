@@ -11,24 +11,17 @@ import org.junit.runners.model.FrameworkMethod;
  */
 public class DataProviderFrameworkMethod extends FrameworkMethod {
 
-    /**
-     * Index of exploded test method such that each get a unique name.
-     */
+    /** Index of exploded test method such that each get a unique name. */
     private int index = 1;
 
-    /**
-     * Number of rows the DataProvider returns.
-     */
+    /** Number of rows the DataProvider returns. */
+    // TODO rename this
     private int numberOfRows = 1;
 
-    /**
-	  * The {@link ExtendedDataProvider} object. If none was used, it will be {@code null}.
-     */
+    /** The {@link ExtendedDataProvider} object. If none was used, it will be {@code null}. */
     private FrameworkField extendedDataProvider = null;
 
-    /**
-     * Parameters to invoke the test method.
-     */
+    /** Parameters to invoke the test method. */
     private final Object[] parameters;
 
     public DataProviderFrameworkMethod(Method method, int index, Object[] parameters) {
