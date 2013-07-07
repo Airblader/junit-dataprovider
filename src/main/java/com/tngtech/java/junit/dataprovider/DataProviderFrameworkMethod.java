@@ -82,29 +82,37 @@ public class DataProviderFrameworkMethod extends FrameworkMethod {
 
     @Override
     public Object invokeExplosively(Object target, Object... params) throws Throwable {
-    	// TODO make sure before/after methods all run even if one of them fails
-
-		if (getNumberOfRows() == 1 || getIndex() == 0) {
-			invokeExtendedDataProviderMethod("beforeAll");
-		}
-
-		invokeExtendedDataProviderMethod("beforeEach");
+		invokeBefores();
 
     	Object result = null;
     	try {
     		result = super.invokeExplosively(target, parameters);
-    	} catch (Throwable t) {
-    		throw t;
     	} finally {
-    		invokeExtendedDataProviderMethod("afterEach");
-
-    		if (getNumberOfRows() == 1 || getIndex() >= getNumberOfRows()) {
-    			invokeExtendedDataProviderMethod("afterAll");
-    		}
+    		invokeAfters();
     	}
 
     	return result;
     }
+
+    private void invokeBefores() throws Throwable {
+    	try {
+	    	if (getNumberOfRows() == 1 || getIndex() == 0) {
+	    		invokeExtendedDataProviderMethod("beforeAll");
+	    	}
+    	} finally {
+    		invokeExtendedDataProviderMethod("beforeEach");
+    	}
+    }
+
+    private void invokeAfters() throws Throwable {
+    	try {
+    		invokeExtendedDataProviderMethod("afterEach");
+    	} finally {
+			if (getNumberOfRows() == 1 || getIndex() >= getNumberOfRows()) {
+				invokeExtendedDataProviderMethod("afterAll");
+			}
+    	}
+	}
 
     private void invokeExtendedDataProviderMethod(String methodName) throws Throwable {
     	if (extendedDataProvider == null) {
