@@ -14,8 +14,7 @@ public class DataProviderFrameworkMethod extends FrameworkMethod {
     /**
      * Index of exploded test method such that each get a unique name.
      */
-	// TODO use 1-based index
-    private int index = 0;
+    private int index = 1;
 
     /**
      * Number of rows the DataProvider returns.
@@ -84,9 +83,6 @@ public class DataProviderFrameworkMethod extends FrameworkMethod {
     @Override
     public Object invokeExplosively(Object target, Object... params) throws Throwable {
     	// TODO make sure before/after methods all run even if one of them fails
-
-    	// TODO check index/numberOfRows
-    	System.out.println(getMethod().getName() + " : " + getIndex() + "/" + getNumberOfRows());
 
 		if (getNumberOfRows() == 1 || getIndex() == 0) {
 			invokeExtendedDataProviderMethod("beforeAll");

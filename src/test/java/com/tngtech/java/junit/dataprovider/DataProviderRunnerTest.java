@@ -553,7 +553,7 @@ public class DataProviderRunnerTest {
         assertThat(result.get(0)).isInstanceOf(DataProviderFrameworkMethod.class);
 
         DataProviderFrameworkMethod actual = (DataProviderFrameworkMethod) result.get(0);
-        assertThat(actual.getIndex()).isEqualTo(0);
+        assertThat(actual.getIndex()).isEqualTo(1);
         assertThat(actual.getParameters()).isEqualTo(dataProviderMethodResult[0]);
     }
 
@@ -576,19 +576,19 @@ public class DataProviderRunnerTest {
         assertThat(result.get(0)).isInstanceOf(DataProviderFrameworkMethod.class);
 
         DataProviderFrameworkMethod actual0 = (DataProviderFrameworkMethod) result.get(0);
-        assertThat(actual0.getIndex()).isEqualTo(0);
+        assertThat(actual0.getIndex()).isEqualTo(1);
         assertThat(actual0.getParameters()).isEqualTo(dataProviderMethodResult[0]);
 
         assertThat(result.get(1)).isInstanceOf(DataProviderFrameworkMethod.class);
 
         DataProviderFrameworkMethod actual1 = (DataProviderFrameworkMethod) result.get(1);
-        assertThat(actual1.getIndex()).isEqualTo(1);
+        assertThat(actual1.getIndex()).isEqualTo(2);
         assertThat(actual1.getParameters()).isEqualTo(dataProviderMethodResult[1]);
 
         assertThat(result.get(0)).isInstanceOf(DataProviderFrameworkMethod.class);
 
         DataProviderFrameworkMethod actual2 = (DataProviderFrameworkMethod) result.get(2);
-        assertThat(actual2.getIndex()).isEqualTo(2);
+        assertThat(actual2.getIndex()).isEqualTo(3);
         assertThat(actual2.getParameters()).isEqualTo(dataProviderMethodResult[2]);
     }
 

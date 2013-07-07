@@ -309,7 +309,7 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
      */
     @VisibleForTesting
     List<FrameworkMethod> explodeTestMethod(FrameworkMethod testMethod, FrameworkMethod dataProviderMethod) {
-        int index = 0;
+        int index = 1;
         List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
 
         Object[][] dataProviderMethodResult;
@@ -340,7 +340,7 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
     List<FrameworkMethod> explodeTestMethod(FrameworkMethod testMethod, FrameworkField dataProviderField) {
     	// TODO this can maybe be merged with the method for FrameworkMethod
 
-        int index = 0;
+        int index = 1;
         List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
 
         Object[][] dataProviderMethodResult;
@@ -365,7 +365,7 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
 			Object[] parameters = dataProviderMethodResult[i];
 
             DataProviderFrameworkMethod dataProviderFrameworkMethod = new DataProviderFrameworkMethod(testMethod.getMethod(),
-            		index++, dataProviderMethodResult.length-1, parameters);
+            		index++, dataProviderMethodResult.length, parameters);
             dataProviderFrameworkMethod.setExtendedDataProvider(dataProviderField);
 
             result.add(dataProviderFrameworkMethod);
