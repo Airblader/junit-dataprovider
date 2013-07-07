@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 
 /**
  * Mark a test method for use with a data provider. The value must be the name of a {@code @}{@link DataProvider}
- * method.
+ * method or an {@link ExtendedDataProvider} object.
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

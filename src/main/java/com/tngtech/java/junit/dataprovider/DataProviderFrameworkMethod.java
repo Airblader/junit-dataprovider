@@ -3,6 +3,7 @@ package com.tngtech.java.junit.dataprovider;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
+import org.junit.runners.model.FrameworkField;
 import org.junit.runners.model.FrameworkMethod;
 
 /**
@@ -12,73 +13,141 @@ public class DataProviderFrameworkMethod extends FrameworkMethod {
 
     /**
      * Index of exploded test method such that each get a unique name.
-     * <p>
-     * This method is package private (= visible) for testing.
-     * </p>
      */
-    final int idx;
+	// TODO use 1-based index
+    private int index = 0;
+
+    /**
+     * Number of rows the DataProvider returns.
+     */
+    private int numberOfRows = 1;
+
+    /**
+	  * The {@link ExtendedDataProvider} object. If none was used, it will be {@code null}.
+     */
+    private FrameworkField extendedDataProvider = null;
 
     /**
      * Parameters to invoke the test method.
-     * <p>
-     * This method is package private (= visible) for testing.
-     * </p>
      */
-    final Object[] parameters;
+    private final Object[] parameters;
 
-    public DataProviderFrameworkMethod(Method method, int idx, Object[] parameters) {
+    public DataProviderFrameworkMethod(Method method, int index, Object[] parameters) {
+    	this(method, index, 1, parameters);
+    }
+
+    public DataProviderFrameworkMethod(Method method, int index, int numberOfRows, Object[] parameters) {
         super(method);
-        this.idx = idx;
+
+        setNumberOfRows(numberOfRows);
+        setIndex(index);
+
         if (parameters == null) {
             throw new IllegalArgumentException("parameter must not be null");
         }
         if (parameters.length == 0) {
             throw new IllegalArgumentException("parameter must not be empty");
         }
+
         this.parameters = Arrays.copyOf(parameters, parameters.length);
+    }
+
+    public void setExtendedDataProvider (FrameworkField provider) {
+    	extendedDataProvider = provider;
+    }
+
+    public void setNumberOfRows(int numberOfRows) {
+    	this.numberOfRows = numberOfRows;
+    }
+
+    public int getNumberOfRows() {
+    	return numberOfRows;
+    }
+
+    public void setIndex(int index) {
+    	this.index = index;
+    }
+
+    public int getIndex() {
+    	return index;
+    }
+
+    public Object[] getParameters() {
+    	return parameters;
     }
 
     @Override
     public String getName() {
-        return String.format("%s[%d: %s]", super.getName(), idx, format(parameters));
+        return String.format("%s[%d: %s]", super.getName(), index, format(parameters));
     }
 
     @Override
     public Object invokeExplosively(Object target, Object... params) throws Throwable {
-        return super.invokeExplosively(target, parameters);
+    	// TODO make sure before/after methods all run even if one of them fails
+
+    	// TODO check index/numberOfRows
+    	System.out.println(getMethod().getName() + " : " + getIndex() + "/" + getNumberOfRows());
+
+		if (getNumberOfRows() == 1 || getIndex() == 0) {
+			invokeExtendedDataProviderMethod("beforeAll");
+		}
+
+		invokeExtendedDataProviderMethod("beforeEach");
+
+    	Object result = null;
+    	try {
+    		result = super.invokeExplosively(target, parameters);
+    	} catch (Throwable t) {
+    		throw t;
+    	} finally {
+    		invokeExtendedDataProviderMethod("afterEach");
+
+    		if (getNumberOfRows() == 1 || getIndex() == getNumberOfRows()) {
+    			invokeExtendedDataProviderMethod("afterAll");
+    		}
+    	}
+
+    	return result;
+    }
+
+    private void invokeExtendedDataProviderMethod(String methodName) throws Throwable {
+    	if (extendedDataProvider == null) {
+    		return;
+    	}
+
+		Class<?> clazz = Class.forName(extendedDataProvider.getField().getType().getName());
+		clazz.getMethod(methodName, new Class<?>[] {}).invoke(extendedDataProvider.get(clazz));
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + idx;
-        result = prime * result + Arrays.hashCode(parameters);
-        return result;
-    }
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + index;
+		result = prime * result + numberOfRows;
+		result = prime * result + Arrays.hashCode(parameters);
+		return result;
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!super.equals(obj)) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        DataProviderFrameworkMethod other = (DataProviderFrameworkMethod) obj;
-        if (idx != other.idx) {
-            return false;
-        }
-        if (!Arrays.equals(parameters, other.parameters)) {
-            return false;
-        }
-        return true;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DataProviderFrameworkMethod other = (DataProviderFrameworkMethod) obj;
+		if (index != other.index)
+			return false;
+		if (numberOfRows != other.numberOfRows)
+			return false;
+		if (!Arrays.equals(parameters, other.parameters))
+			return false;
+		return true;
+	}
 
-    /**
+	/**
      * Returns a string representation of the given parameters. The parameters are converted to string by the following
      * rules:
      * <ul>

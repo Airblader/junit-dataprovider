@@ -46,7 +46,7 @@ public class DataProviderFrameworkMethodTest {
 
         // Then:
         assertThat(underTest).isNotNull();
-        assertThat(underTest.parameters).isEqualTo(parameters);
+        assertThat(underTest.getParameters()).isEqualTo(parameters);
     }
 
     @Test

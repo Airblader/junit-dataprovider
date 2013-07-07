@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+
 public class DataProviderRunnerTest {
 
     @Spy
@@ -38,7 +39,6 @@ public class DataProviderRunnerTest {
         doReturn(testClass).when(underTest).getTestClassInt();
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testDataProviderRunner() throws Exception {
 
@@ -153,7 +153,7 @@ public class DataProviderRunnerTest {
         // Given:
 
         // When:
-        underTest.validateDataProviderMethods(null);
+        underTest.validateDataProviderObjects(null);
 
         // Then: expect exception
     }
@@ -175,7 +175,7 @@ public class DataProviderRunnerTest {
         List<Throwable> errors = new ArrayList<Throwable>();
 
         // When:
-        underTest.validateDataProviderMethods(errors);
+        underTest.validateDataProviderObjects(errors);
 
         // Then:
         assertThat(errors).hasSize(1);
@@ -201,7 +201,7 @@ public class DataProviderRunnerTest {
         List<Throwable> errors = new ArrayList<Throwable>();
 
         // When:
-        underTest.validateDataProviderMethods(errors);
+        underTest.validateDataProviderObjects(errors);
 
         // Then:
         assertThat(errors).hasSize(1);
@@ -228,7 +228,7 @@ public class DataProviderRunnerTest {
         List<Throwable> errors = new ArrayList<Throwable>();
 
         // When:
-        underTest.validateDataProviderMethods(errors);
+        underTest.validateDataProviderObjects(errors);
 
         // Then:
         assertThat(errors).isEmpty();
@@ -503,7 +503,7 @@ public class DataProviderRunnerTest {
         // Then: expect exception
     }
 
-    @Test(expected = Error.class)
+    @Test(expected = IllegalStateException.class)
     public void testExplodeTestMethodsShouldThrowErrorIfDataProviderMethodReturnsNull() throws Throwable {
 
         // Given:
@@ -518,7 +518,7 @@ public class DataProviderRunnerTest {
         // Then: expect exception
     }
 
-    @Test(expected = Error.class)
+    @Test(expected = IllegalStateException.class)
     public void testExplodeTestMethodsShouldThrowErrorIfDataProviderMethodReturnsEmptyObjectArrayArray()
             throws Throwable {
 
@@ -553,8 +553,8 @@ public class DataProviderRunnerTest {
         assertThat(result.get(0)).isInstanceOf(DataProviderFrameworkMethod.class);
 
         DataProviderFrameworkMethod actual = (DataProviderFrameworkMethod) result.get(0);
-        assertThat(actual.idx).isEqualTo(0);
-        assertThat(actual.parameters).isEqualTo(dataProviderMethodResult[0]);
+        assertThat(actual.getIndex()).isEqualTo(0);
+        assertThat(actual.getParameters()).isEqualTo(dataProviderMethodResult[0]);
     }
 
     @Test
@@ -576,20 +576,20 @@ public class DataProviderRunnerTest {
         assertThat(result.get(0)).isInstanceOf(DataProviderFrameworkMethod.class);
 
         DataProviderFrameworkMethod actual0 = (DataProviderFrameworkMethod) result.get(0);
-        assertThat(actual0.idx).isEqualTo(0);
-        assertThat(actual0.parameters).isEqualTo(dataProviderMethodResult[0]);
+        assertThat(actual0.getIndex()).isEqualTo(0);
+        assertThat(actual0.getParameters()).isEqualTo(dataProviderMethodResult[0]);
 
         assertThat(result.get(1)).isInstanceOf(DataProviderFrameworkMethod.class);
 
         DataProviderFrameworkMethod actual1 = (DataProviderFrameworkMethod) result.get(1);
-        assertThat(actual1.idx).isEqualTo(1);
-        assertThat(actual1.parameters).isEqualTo(dataProviderMethodResult[1]);
+        assertThat(actual1.getIndex()).isEqualTo(1);
+        assertThat(actual1.getParameters()).isEqualTo(dataProviderMethodResult[1]);
 
         assertThat(result.get(0)).isInstanceOf(DataProviderFrameworkMethod.class);
 
         DataProviderFrameworkMethod actual2 = (DataProviderFrameworkMethod) result.get(2);
-        assertThat(actual2.idx).isEqualTo(2);
-        assertThat(actual2.parameters).isEqualTo(dataProviderMethodResult[2]);
+        assertThat(actual2.getIndex()).isEqualTo(2);
+        assertThat(actual2.getParameters()).isEqualTo(dataProviderMethodResult[2]);
     }
 
     private Method getMethod(String methodName, Class<?>... args) {
@@ -611,7 +611,7 @@ public class DataProviderRunnerTest {
         return null;
     }
 
-    public static Object[][] nonNoArgDataProviderMethod(@SuppressWarnings("unused") Object obj) {
+    public static Object[][] nonNoArgDataProviderMethod(Object obj) {
         return null;
     }
 
