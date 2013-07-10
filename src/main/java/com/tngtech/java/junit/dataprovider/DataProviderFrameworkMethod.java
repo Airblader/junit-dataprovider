@@ -89,7 +89,7 @@ public class DataProviderFrameworkMethod extends FrameworkMethod {
 
     private void invokeBefores() throws Throwable {
     	try {
-	    	if (getNumberOfRows() == 1 || getIndex() == 0) {
+	    	if (getNumberOfRows() == 1 || getIndex() == 1) {
 	    		invokeExtendedDataProviderMethod("beforeAll");
 	    	}
     	} finally {
