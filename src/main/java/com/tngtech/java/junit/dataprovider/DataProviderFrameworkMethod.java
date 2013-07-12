@@ -3,7 +3,6 @@ package com.tngtech.java.junit.dataprovider;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
-import org.junit.runners.model.FrameworkField;
 import org.junit.runners.model.FrameworkMethod;
 
 /**
@@ -11,15 +10,8 @@ import org.junit.runners.model.FrameworkMethod;
  */
 public class DataProviderFrameworkMethod extends FrameworkMethod {
 
-    /** Index of exploded test method such that each get a unique name. */
+    /** Index of exploded test method such that each gets a unique name. */
     private int index = 1;
-
-    /** Number of rows the DataProvider returns. */
-    // TODO rename this
-    private int numberOfRows = 1;
-
-    /** The {@link ExtendedDataProvider} object. If none was used, it will be {@code null}. */
-    private FrameworkField extendedDataProvider = null;
 
     /** Parameters to invoke the test method. */
     private final Object[] parameters;
@@ -31,7 +23,6 @@ public class DataProviderFrameworkMethod extends FrameworkMethod {
     public DataProviderFrameworkMethod(Method method, int index, int numberOfRows, Object[] parameters) {
         super(method);
 
-        setNumberOfRows(numberOfRows);
         setIndex(index);
 
         if (parameters == null) {
@@ -44,27 +35,15 @@ public class DataProviderFrameworkMethod extends FrameworkMethod {
         this.parameters = Arrays.copyOf(parameters, parameters.length);
     }
 
-    public void setExtendedDataProvider (FrameworkField provider) {
-    	extendedDataProvider = provider;
-    }
-
-    public void setNumberOfRows(int numberOfRows) {
-    	this.numberOfRows = numberOfRows;
-    }
-
-    public int getNumberOfRows() {
-    	return numberOfRows;
-    }
-
-    public void setIndex(int index) {
+    protected void setIndex(int index) {
     	this.index = index;
     }
 
-    public int getIndex() {
+    protected int getIndex() {
     	return index;
     }
 
-    public Object[] getParameters() {
+    protected Object[] getParameters() {
     	return parameters;
     }
 
@@ -75,53 +54,14 @@ public class DataProviderFrameworkMethod extends FrameworkMethod {
 
     @Override
     public Object invokeExplosively(Object target, Object... params) throws Throwable {
-		invokeBefores();
-
-    	Object result = null;
-    	try {
-    		result = super.invokeExplosively(target, parameters);
-    	} finally {
-    		invokeAfters();
-    	}
-
-    	return result;
+    	return super.invokeExplosively(target, parameters);
     }
 
-    private void invokeBefores() throws Throwable {
-    	try {
-	    	if (getNumberOfRows() == 1 || getIndex() == 1) {
-	    		invokeExtendedDataProviderMethod("beforeAll");
-	    	}
-    	} finally {
-    		invokeExtendedDataProviderMethod("beforeEach");
-    	}
-    }
-
-    private void invokeAfters() throws Throwable {
-    	try {
-    		invokeExtendedDataProviderMethod("afterEach");
-    	} finally {
-			if (getNumberOfRows() == 1 || getIndex() >= getNumberOfRows()) {
-				invokeExtendedDataProviderMethod("afterAll");
-			}
-    	}
-	}
-
-    private void invokeExtendedDataProviderMethod(String methodName) throws Throwable {
-    	if (extendedDataProvider == null) {
-    		return;
-    	}
-
-		Class<?> clazz = Class.forName(extendedDataProvider.getField().getType().getName());
-		clazz.getMethod(methodName, new Class<?>[] {}).invoke(extendedDataProvider.get(clazz));
-    }
-
-    @Override
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
 		result = prime * result + index;
-		result = prime * result + numberOfRows;
 		result = prime * result + Arrays.hashCode(parameters);
 		return result;
 	}
@@ -136,8 +76,6 @@ public class DataProviderFrameworkMethod extends FrameworkMethod {
 			return false;
 		DataProviderFrameworkMethod other = (DataProviderFrameworkMethod) obj;
 		if (index != other.index)
-			return false;
-		if (numberOfRows != other.numberOfRows)
 			return false;
 		if (!Arrays.equals(parameters, other.parameters))
 			return false;

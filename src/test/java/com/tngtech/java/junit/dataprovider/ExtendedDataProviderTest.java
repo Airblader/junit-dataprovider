@@ -1,6 +1,8 @@
 package com.tngtech.java.junit.dataprovider;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -57,6 +59,7 @@ public class ExtendedDataProviderTest {
 	@UseDataProvider("secondProvider")
 	public void testSecondExtendedDataProvider(int number) {
 		Assert.assertEquals(number, 1);
+		System.out.println("testSecondExtendedDataProvider()");
 	}
 
 	@DataProvider
@@ -71,11 +74,22 @@ public class ExtendedDataProviderTest {
 	@UseDataProvider("thirdProvider")
 	public void testThirdExtendedDataProvider(int number) {
 		Assert.assertEquals(number, 1);
+		System.out.println("testThirdExtendedDataProvider()");
 	}
 
 	@Test
 	public void testWithoutDataProvider() throws Throwable {
 		System.out.println("testWithoutDataProvider");
+	}
+
+	@Before
+	public void before() {
+		System.out.println("before()");
+	}
+
+	@After
+	public void after() {
+		System.out.println("after()");
 	}
 
 }

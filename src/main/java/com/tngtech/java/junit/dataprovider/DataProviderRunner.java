@@ -3,10 +3,17 @@ package com.tngtech.java.junit.dataprovider;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.assertj.core.util.VisibleForTesting;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.internal.runners.model.MultipleFailureException;
+import org.junit.internal.runners.model.ReflectiveCallable;
+import org.junit.internal.runners.statements.Fail;
+import org.junit.rules.MethodRule;
 import org.junit.runner.Description;
 import org.junit.runner.manipulation.Filter;
 import org.junit.runner.manipulation.NoTestsRemainException;
@@ -14,6 +21,7 @@ import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkField;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestClass;
 
 
@@ -25,6 +33,31 @@ import org.junit.runners.model.TestClass;
  * Your test method must be annotated with {@code @}{@link UseDataProvider}, additionally.
  */
 public class DataProviderRunner extends BlockJUnit4ClassRunner {
+
+	// TODO rename
+	private static class MethodCounter {
+		private int currentIndex = 0;
+		private int numberOfRuns = 0;
+
+		public int getCurrentIndex() {
+			return currentIndex;
+		}
+
+		public void increaseCurrentIndex() {
+			currentIndex++;
+		}
+
+		public void increaseNumberOfRuns() {
+			numberOfRuns++;
+		}
+
+		public boolean isLastRun() {
+			return numberOfRuns == 1 || currentIndex == numberOfRuns;
+		}
+	}
+
+	// TODO can probably be combined with computedTestMethods
+	private static Map<String, MethodCounter> methodCounterMap = new HashMap<String, MethodCounter>();
 
 	@VisibleForTesting
     List<FrameworkMethod> computedTestMethods;
@@ -43,35 +76,18 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
     public void filter(final Filter filter) throws NoTestsRemainException {
 		DataProviderFilter dataProviderFilter = new DataProviderFilter(filter);
 
-		computedTestMethods = getFilteredMethods(dataProviderFilter);
-		updateNumberOfRows();
+		// TODO refactor
+		List<FrameworkMethod> filtered = getFilteredMethods(dataProviderFilter);
+		methodCounterMap = new HashMap<String, DataProviderRunner.MethodCounter>();
+		for (FrameworkMethod method : filtered) {
+            if (!methodCounterMap.containsKey(getFullyQualifiedName(method))) {
+            	methodCounterMap.put(getFullyQualifiedName(method), new MethodCounter());
+            }
+            methodCounterMap.get(getFullyQualifiedName(method)).increaseNumberOfRuns();
+		}
 
         super.filter(dataProviderFilter);
     }
-
-    /**
-     * Updates the number of rows of each computed test.
-     */
-    // TODO rename
-	private void updateNumberOfRows() {
-		for (FrameworkMethod method : computedTestMethods) {
-			if (method instanceof DataProviderFrameworkMethod) {
-				((DataProviderFrameworkMethod) method).setNumberOfRows(getNumberOfMethods(method.getMethod()));
-			}
-		}
-	}
-
-	// TODO rename
-	private int getNumberOfMethods(Method method) {
-		int count = 0;
-		for (FrameworkMethod current : computedTestMethods) {
-			if (current instanceof DataProviderFrameworkMethod && current.getMethod().getName().equals(method.getName())) {
-				count++;
-			}
-		}
-
-		return count;
-	}
 
 	/**
 	 * Returns a list of all tests that will be run after applying the specified filter.
@@ -120,6 +136,103 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
             }
         }
     }
+
+    @Override
+	@SuppressWarnings("deprecation")
+	protected Statement methodBlock(FrameworkMethod method) {
+		Object test;
+		try {
+			test = new ReflectiveCallable() {
+				@Override
+				protected Object runReflectiveCall() throws Throwable {
+					return createTest();
+				}
+			}.run();
+		} catch (Throwable e) {
+			return new Fail(e);
+		}
+
+		Statement statement = methodInvoker(method, test);
+		statement = possiblyExpectingExceptions(method, test, statement);
+		statement = withPotentialTimeout(method, test, statement);
+		statement = withDataProviderSpecialMethods(method, statement);
+		statement = withBefores(method, test, statement);
+		statement = withAfters(method, test, statement);
+		statement = withRules(method, test, statement);
+
+		return statement;
+	}
+
+	private Statement withRules(FrameworkMethod method, Object target, Statement statement) {
+		Statement result = statement;
+		for (MethodRule each : getTestClass().getAnnotatedFieldValues(target, Rule.class, MethodRule.class)) {
+			result= each.apply(result, method, target);
+		}
+
+		return result;
+	}
+
+	// TODO name
+	private Statement withDataProviderSpecialMethods(FrameworkMethod method, final Statement statement) {
+		final FrameworkField dataProvider = getDataProviderField(method);
+		final String methodName = getFullyQualifiedName(method);
+
+		return new Statement() {
+			@Override
+			public void evaluate() throws Throwable {
+				// TODO refactor this for better handling of different cases
+				// (no provider, normal provider, new provider)
+				boolean containsKey = methodCounterMap.containsKey(methodName);
+				if (containsKey) {
+					methodCounterMap.get(methodName).increaseCurrentIndex();
+				}
+				List<Throwable> errors = new ArrayList<Throwable>();
+				errors.clear();
+
+				if (containsKey && methodCounterMap.get(methodName).getCurrentIndex() == 1) {
+					invokeDataProviderMethod(dataProvider, "beforeAll", errors);
+				}
+				invokeDataProviderMethod(dataProvider, "beforeEach", errors);
+
+				try {
+					statement.evaluate();
+				} finally {
+					invokeDataProviderMethod(dataProvider, "afterEach", errors);
+					if (containsKey && methodCounterMap.get(methodName).isLastRun()) {
+						invokeDataProviderMethod(dataProvider, "afterAll", errors);
+					}
+				}
+
+				MultipleFailureException.assertEmpty(errors);
+			}
+		};
+	}
+
+	/** Get fully qualified name for a method */
+	private String getFullyQualifiedName(FrameworkMethod method) {
+		if (method == null || method.getMethod() == null || method.getMethod().getDeclaringClass() == null) {
+			return null;
+		}
+
+		return method.getMethod().getDeclaringClass().getName() + "." + method.getMethod().getName();
+	}
+
+	/**
+	 * Invokes a method on a given dataProvider object and returns its output
+	 */
+	private Object invokeDataProviderMethod(FrameworkField dataProvider, String methodName, List<Throwable> errors) {
+		if (dataProvider == null) {
+			return null;
+		}
+
+		try {
+			Class<?> clazz = Class.forName(dataProvider.getField().getType().getName());
+			return clazz.getMethod(methodName, new Class<?>[] {}).invoke(dataProvider.get(clazz));
+		} catch (Throwable t) {
+			errors.add(t);
+			return null;
+		}
+	}
 
 	/**
      * Validates test methods and their data providers. This method cannot use the result of
@@ -308,7 +421,7 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
      * @return a list of methods, each method bound to a parameter combination returned by the data provider
      */
     @VisibleForTesting
-    List<FrameworkMethod> explodeTestMethod(FrameworkMethod testMethod, FrameworkMethod dataProviderMethod) {
+    List<FrameworkMethod> explodeTestMethod(FrameworkMethod testMethod, final FrameworkMethod dataProviderMethod) {
         int index = 1;
         List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
 
@@ -331,6 +444,12 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
         for (Object[] parameters : dataProviderMethodResult) {
             result.add(new DataProviderFrameworkMethod(testMethod.getMethod(), index++, dataProviderMethodResult.length-1,
             		parameters));
+
+            // refactor
+            if (!methodCounterMap.containsKey(getFullyQualifiedName(testMethod))) {
+            	methodCounterMap.put(getFullyQualifiedName(testMethod), new MethodCounter());
+            }
+            methodCounterMap.get(getFullyQualifiedName(testMethod)).increaseNumberOfRuns();
         }
 
         return result;
@@ -338,8 +457,6 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
 
     @VisibleForTesting
     List<FrameworkMethod> explodeTestMethod(FrameworkMethod testMethod, FrameworkField dataProviderField) {
-    	// TODO this can maybe be merged with the method for FrameworkMethod
-
         int index = 1;
         List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
 
@@ -364,11 +481,14 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
 		for (int i = 0; i < dataProviderMethodResult.length; i++) {
 			Object[] parameters = dataProviderMethodResult[i];
 
-            DataProviderFrameworkMethod dataProviderFrameworkMethod = new DataProviderFrameworkMethod(testMethod.getMethod(),
-            		index++, dataProviderMethodResult.length, parameters);
-            dataProviderFrameworkMethod.setExtendedDataProvider(dataProviderField);
+            result.add(new DataProviderFrameworkMethod(testMethod.getMethod(), index++,
+            		dataProviderMethodResult.length, parameters));
 
-            result.add(dataProviderFrameworkMethod);
+            // refactor
+            if (!methodCounterMap.containsKey(getFullyQualifiedName(testMethod))) {
+            	methodCounterMap.put(getFullyQualifiedName(testMethod), new MethodCounter());
+            }
+            methodCounterMap.get(getFullyQualifiedName(testMethod)).increaseNumberOfRuns();
         }
 
         return result;
