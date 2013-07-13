@@ -23,6 +23,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 
+
 public class DataProviderRunnerTest {
 
     @Spy
@@ -67,7 +68,7 @@ public class DataProviderRunnerTest {
         List<FrameworkMethod> result = underTest.computeTestMethods();
 
         // Then:
-        assertThat(result).isEqualTo(underTest.computedTestMethods);
+        assertThat(result).isEqualTo(underTest.computedTestMethods.getListOfComputedMethods());
 
         verify(underTest).computeTestMethods();
         verify(underTest).generateExplodedTestMethodsFor(anyListOf(FrameworkMethod.class));
@@ -80,7 +81,8 @@ public class DataProviderRunnerTest {
         final List<FrameworkMethod> expected = new ArrayList<FrameworkMethod>();
 
         // Given:
-        underTest.computedTestMethods = expected;
+        underTest.computedTestMethods = new DataProviderMethodsList();
+        underTest.computedTestMethods.setListOfComputedMethods(expected);
 
         doReturn(expected).when(underTest).generateExplodedTestMethodsFor(anyListOf(FrameworkMethod.class));
 
@@ -89,7 +91,7 @@ public class DataProviderRunnerTest {
 
         // Then:
         assertThat(result).isSameAs(expected);
-        assertThat(underTest.computedTestMethods).isSameAs(expected);
+        assertThat(underTest.computedTestMethods.getListOfComputedMethods()).isSameAs(expected);
 
         verify(underTest).computeTestMethods();
         verifyNoMoreInteractions(underTest);
