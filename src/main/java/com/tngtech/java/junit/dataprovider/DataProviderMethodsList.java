@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.junit.runners.model.FrameworkMethod;
 
-public class DataProviderMethodsList {
+class DataProviderMethodsList {
     private List<FrameworkMethod> methods = new ArrayList<FrameworkMethod>();
     private Map<String, Counter> counter = new HashMap<String, Counter>();
 

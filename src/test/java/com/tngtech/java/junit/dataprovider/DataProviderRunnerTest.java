@@ -3,6 +3,7 @@ package com.tngtech.java.junit.dataprovider;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -497,7 +498,7 @@ public class DataProviderRunnerTest {
         FrameworkMethod testMethod = mock(FrameworkMethod.class);
         FrameworkMethod dataProviderMethod = mock(FrameworkMethod.class);
 
-        doThrow(NullPointerException.class).when(dataProviderMethod).invokeExplosively(null);
+        doThrow(NullPointerException.class).when(underTest).invokeDataProvider(any(Method.class), any((Class<?>) null));
 
         // When:
         underTest.explodeTestMethod(testMethod, dataProviderMethod);
@@ -510,12 +511,11 @@ public class DataProviderRunnerTest {
 
         // Given:
         FrameworkMethod testMethod = mock(FrameworkMethod.class);
-        FrameworkMethod dataProviderMethod = mock(FrameworkMethod.class);
 
-        doReturn(null).when(dataProviderMethod).invokeExplosively(null);
+        doReturn(null).when(underTest).invokeDataProvider(any(Method.class), any((Class<?>) null));
 
         // When:
-        underTest.explodeTestMethod(testMethod, dataProviderMethod);
+        underTest.explodeTestMethod(testMethod, null, null);
 
         // Then: expect exception
     }
@@ -526,12 +526,11 @@ public class DataProviderRunnerTest {
 
         // Given:
         FrameworkMethod testMethod = mock(FrameworkMethod.class);
-        FrameworkMethod dataProviderMethod = mock(FrameworkMethod.class);
 
-        doReturn(new Object[0][0]).when(dataProviderMethod).invokeExplosively(null);
+        doReturn(new Object[0][0]).when(underTest).invokeDataProvider(any(Method.class), any((Class<?>) null));
 
         // When:
-        underTest.explodeTestMethod(testMethod, dataProviderMethod);
+        underTest.explodeTestMethod(testMethod, null, null);
 
         // Then: expect exception
     }
@@ -545,7 +544,7 @@ public class DataProviderRunnerTest {
         FrameworkMethod dataProviderMethod = mock(FrameworkMethod.class);
 
         Object[][] dataProviderMethodResult = new Object[][] { { 1, 2, 3 } };
-        doReturn(dataProviderMethodResult).when(dataProviderMethod).invokeExplosively(null);
+        doReturn(dataProviderMethodResult).when(underTest).invokeDataProvider(any(Method.class), any((Class<?>) null));
 
         // When:
         List<FrameworkMethod> result = underTest.explodeTestMethod(testMethod, dataProviderMethod);
@@ -568,7 +567,7 @@ public class DataProviderRunnerTest {
         FrameworkMethod dataProviderMethod = mock(FrameworkMethod.class);
 
         Object[][] dataProviderMethodResult = new Object[][] { { 1, "2", 3L }, { 4, "5", 6L }, { 7, "8", 9L } };
-        doReturn(dataProviderMethodResult).when(dataProviderMethod).invokeExplosively(null);
+        doReturn(dataProviderMethodResult).when(underTest).invokeDataProvider(any(Method.class), any((Class<?>) null));
 
         // When:
         List<FrameworkMethod> result = underTest.explodeTestMethod(testMethod, dataProviderMethod);

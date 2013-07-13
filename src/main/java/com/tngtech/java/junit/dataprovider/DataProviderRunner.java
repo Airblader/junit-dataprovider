@@ -365,72 +365,78 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
     }
 
     /**
-     * Creates a list of test methods out of an existing test method and its data provider method.
+     * <p>Creates a list of test methods out of an existing test method and its data provider method.</p>
+     * <p>The generic type {@code T} can either be a {@link FrameworkMethod} or {@link FrameworkField},
+     * otherwise an {@link IllegalArgumentException} will be thrown.</p>
      *
      * @param testMethod the original test method
-     * @param dataProviderMethod the data provider method that gives the parameters
-     * @return a list of methods, each method bound to a parameter combination returned by the data provider
+     * @param dataProvider the data provider method that gives the parameters
+     * @return If {@code dataProvider} is an instance of {@link FrameworkMethod} or {@link FrameworkField},
+     * a list of methods, each method bound to a parameter combination returned by the data provider, is
+     * returned. Otherwise, an {@link IllegalArgumentException} will be thrown.
      */
     @VisibleForTesting
-    List<FrameworkMethod> explodeTestMethod(FrameworkMethod testMethod, final FrameworkMethod dataProviderMethod) {
+    protected <T> List<FrameworkMethod> explodeTestMethod(FrameworkMethod testMethod, T dataProvider) {
+        Method method = null;
+        Object target = null;
+
+        if (dataProvider instanceof FrameworkMethod) {
+            method = ((FrameworkMethod) dataProvider).getMethod();
+            target = null;
+        } else if (dataProvider instanceof FrameworkField) {
+            FrameworkField dataProviderField = (FrameworkField) dataProvider;
+
+            try {
+                Class<?> clazz = Class.forName(dataProviderField.getField().getType().getName());
+                method = clazz.getMethod("provide", new Class<?>[] {});
+                target = dataProviderField.get(clazz);
+            } catch (Throwable t) {
+                throw new Error(String.format("Exception while exploding test method using data provider '%s'",
+                        dataProviderField.getField().getName()), t);
+            }
+        } else {
+            throw new IllegalArgumentException("Parameter dataProvider must be a method or field");
+        }
+
+        try {
+            return explodeTestMethod(testMethod, method, target);
+        } catch (Throwable t) {
+            throw new Error(String.format("Exception while exploding test method: %s", t.getMessage()), t);
+        }
+    }
+
+    @VisibleForTesting
+    protected List<FrameworkMethod> explodeTestMethod(FrameworkMethod testMethod, Method dataProvider, Object target)
+            throws Throwable {
         int index = 1;
         List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
 
-        Object[][] dataProviderMethodResult;
-        try {
-            dataProviderMethodResult = (Object[][]) dataProviderMethod.invokeExplosively(null);
-        } catch (Throwable t) {
-            throw new Error(String.format("Exception while exploding test method using data provider '%s': %s",
-                    dataProviderMethod.getName(), t.getMessage()), t);
-        }
+        Object[][] dataProviderMethodResult = invokeDataProvider(dataProvider, target);
+
         if (dataProviderMethodResult == null) {
             throw new IllegalStateException(String.format("Data provider method '%s' must not return 'null'.",
-                    dataProviderMethod.getName()));
+                    (dataProvider != null) ? dataProvider.getName() : "<null>"));
         }
+
         if (dataProviderMethodResult.length == 0) {
             throw new IllegalStateException(String.format("Data provider '%s' must not return an empty object array.",
-                    dataProviderMethod.getName()));
+                    (dataProvider != null) ? dataProvider.getName() : "<null>"));
         }
 
         for (Object[] parameters : dataProviderMethodResult) {
-            result.add(new DataProviderFrameworkMethod(testMethod.getMethod(), index++, dataProviderMethodResult.length-1,
-            		parameters));
+            result.add(new DataProviderFrameworkMethod(testMethod.getMethod(), index++, dataProviderMethodResult.length,
+                    parameters));
         }
 
         return result;
     }
 
+    /**
+     * <p>This is extracted into a method for testing purposes.</p>
+     */
     @VisibleForTesting
-    List<FrameworkMethod> explodeTestMethod(FrameworkMethod testMethod, FrameworkField dataProviderField) {
-        int index = 1;
-        List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
-
-        Object[][] dataProviderMethodResult;
-        try {
-        	Class<?> clazz = Class.forName(dataProviderField.getField().getType().getName());
-        	Method method = clazz.getMethod("provide", new Class<?>[] {});
-            dataProviderMethodResult = (Object[][]) method.invoke(dataProviderField.get(clazz));
-        } catch (Throwable t) {
-            throw new Error(String.format("Exception while exploding test method using data provider '%s': %s",
-                    dataProviderField.getField().getName(), t.getMessage()), t);
-        }
-        if (dataProviderMethodResult == null) {
-            throw new IllegalStateException(String.format("Data provider method '%s' must not return 'null'.",
-                    dataProviderField.getField().getName()));
-        }
-        if (dataProviderMethodResult.length == 0) {
-            throw new IllegalStateException(String.format("Data provider '%s' must not return an empty object array.",
-                    dataProviderField.getField().getName()));
-        }
-
-		for (int i = 0; i < dataProviderMethodResult.length; i++) {
-			Object[] parameters = dataProviderMethodResult[i];
-
-            result.add(new DataProviderFrameworkMethod(testMethod.getMethod(), index++,
-            		dataProviderMethodResult.length, parameters));
-        }
-
-        return result;
+    protected Object[][] invokeDataProvider(Method dataProvider, Object target) throws Throwable {
+        return (Object[][]) dataProvider.invoke(target);
     }
 
     /**
