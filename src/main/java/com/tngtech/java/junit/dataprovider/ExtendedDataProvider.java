@@ -18,25 +18,40 @@ package com.tngtech.java.junit.dataprovider;
  */
 public abstract class ExtendedDataProvider {
 
-	/** Implement this method to return the parameters the DataProvider should pass to the test. */
+    /**
+     * <p>Implement this method to return the parameters the DataProvider should pass to the test.</p>
+     * <p><i>Note:</i> This method is used reflectively.
+     */
 	public abstract Object[][] provide();
 
-	/** This method will be called before each individual test run. */
+	/**
+	 * <p>This method will be called before each individual test run.</p>
+	 * <p><i>Note:</i> This method is used reflectively.
+	 */
 	public void beforeEach() {
 		/* override this method to use it */
 	}
 
-	/** This method will be called after each individual test run. */
+	/**
+	 * <p>This method will be called after each individual test run.</p>
+	 * <p><i>Note:</i> This method is used reflectively.
+	 */
 	public void afterEach() {
 		/* override this method to use it */
 	}
 
-	/** This method will be called once before all test runs. */
+	/**
+	 * <p>This method will be called once before all test runs.</p>
+	 * <p><i>Note:</i> This method is used reflectively.
+	 */
 	public void beforeAll() {
 		/* override this method to use it */
 	}
 
-	/** This method will be called once after all test runs. */
+	/**
+	 * <p>This method will be called once after all test runs.</p>
+	 * <p><i>Note:</i> This method is used reflectively.
+	 */
 	public void afterAll() {
 		/* override this method to use it */
 	}

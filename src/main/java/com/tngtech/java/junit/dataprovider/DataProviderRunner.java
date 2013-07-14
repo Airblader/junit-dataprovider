@@ -209,10 +209,10 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
 
             if (dataProviderMethod == null && dataProviderField == null) {
                 errors.add(new Error("No such data provider: " + dataProviderName));
-            } else if (dataProviderMethod != null && !isValidDataProviderMethod(dataProviderMethod)) {
+            } else if (dataProviderMethod != null && !isValidDataProvider(dataProviderMethod)) {
                 errors.add(new Error("The data provider method '" + dataProviderName + "' is not valid. "
                         + "A valid method must be public, static, has no arguments parameters and returns 'Object[][]'"));
-            } else if (dataProviderField != null && !isValidDataProviderField(dataProviderField)) {
+            } else if (dataProviderField != null && !isValidDataProvider(dataProviderField)) {
             	errors.add(new Error("The extended data provider '" + dataProviderName + "' is not valid. "));
             }
         }
@@ -238,9 +238,9 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
             FrameworkMethod dataProviderMethod = getDataProviderMethod(testMethod);
             FrameworkField dataProviderField = getDataProviderField(testMethod);
 
-            if (isValidDataProviderMethod(dataProviderMethod)) {
+            if (isValidDataProvider(dataProviderMethod)) {
                 result.addAll(explodeTestMethod(testMethod, dataProviderMethod));
-            } else if (isValidDataProviderField(dataProviderField)) {
+            } else if (isValidDataProvider(dataProviderField)) {
             	result.addAll(explodeTestMethod(testMethod, dataProviderField));
             } else {
                 result.add(testMethod);
@@ -317,20 +317,28 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
     }
 
     /**
-     * Checks if the given method is a valid data provider. A method is a valid data provider if and only if the method
-     * <ul>
-     * <li>is not null,</li>
-     * <li>is public,</li>
-     * <li>is static,</li>
-     * <li>has no parameters, and</li>
-     * <li>returns an {@link Object}{@code [][]}.</li>
-     * </ul>
+     * Checks if the given method or field is a valid data provider.
+     * TODO specify what valid means
      *
-     * @param dataProviderMethod the method to check
-     * @return true if the method is a valid data provider, false otherwise
+     * @param dataProvider the method or field to check
+     * @return true if {@code dataProvider} is a valid data provider, false otherwise
      */
     @VisibleForTesting
-    boolean isValidDataProviderMethod(FrameworkMethod dataProviderMethod) {
+    protected <T> boolean isValidDataProvider(T dataProvider) {
+        if (dataProvider == null) {
+            return false;
+        }
+
+        if (dataProvider instanceof FrameworkMethod) {
+            return isValidDataProviderMethod((FrameworkMethod) dataProvider);
+        } else if (dataProvider instanceof FrameworkField) {
+            return isValidDataProviderField((FrameworkField) dataProvider);
+        } else {
+            throw new IllegalArgumentException("dataProvider must be a FrameworkMethod or FrameworkField");
+        }
+    }
+
+    private boolean isValidDataProviderMethod(FrameworkMethod dataProviderMethod) {
     	// @formatter:off
 		return dataProviderMethod != null
                 && Modifier.isPublic(dataProviderMethod.getMethod().getModifiers())
@@ -340,28 +348,26 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
         // @formatter:on
     }
 
-    @VisibleForTesting
-    boolean isValidDataProviderField(FrameworkField dataProviderField) {
+    private boolean isValidDataProviderField(FrameworkField dataProviderField) {
     	if (dataProviderField == null
     			|| !Modifier.isPublic(dataProviderField.getField().getModifiers())
     			|| !Modifier.isStatic(dataProviderField.getField().getModifiers())) {
     		return false;
     	}
 
-    	Method provide = null;
+    	Method provideMethod = null;
 		try {
-			provide = Class.forName(dataProviderField.getField().getType().getName())
+			provideMethod = Class.forName(dataProviderField.getField().getType().getName())
 					.getMethod("provide", new Class<?>[] {});
 		} catch (Throwable e) {
 			return false;
 		}
 
-		if (provide == null || provide.getParameterTypes().length != 0
-				|| !provide.getReturnType().equals(Object[][].class)) {
-			return false;
-		}
-
-    	return true;
+		// @formatter:off
+		return provideMethod != null
+		        && provideMethod.getParameterTypes().length == 0
+		        && provideMethod.getReturnType().equals(Object[][].class);
+		// @formatter:on
     }
 
     /**

@@ -199,7 +199,7 @@ public class DataProviderRunnerTest {
         doReturn(dataProviderMethod).when(underTest).getDataProviderMethod(testMethod);
         doReturn(useDataProvider).when(testMethod).getAnnotation(UseDataProvider.class);
         doReturn(dataProviderName).when(useDataProvider).value();
-        doReturn(false).when(underTest).isValidDataProviderMethod(dataProviderMethod);
+        doReturn(false).when(underTest).isValidDataProvider(dataProviderMethod);
 
         List<Throwable> errors = new ArrayList<Throwable>();
 
@@ -226,7 +226,7 @@ public class DataProviderRunnerTest {
         doReturn(dataProviderMethod).when(underTest).getDataProviderMethod(testMethod);
         doReturn(useDataProvider).when(testMethod).getAnnotation(UseDataProvider.class);
         doReturn(dataProviderName).when(useDataProvider).value();
-        doReturn(true).when(underTest).isValidDataProviderMethod(dataProviderMethod);
+        doReturn(true).when(underTest).isValidDataProvider(dataProviderMethod);
 
         List<Throwable> errors = new ArrayList<Throwable>();
 
@@ -270,7 +270,7 @@ public class DataProviderRunnerTest {
         FrameworkMethod dataProviderMethod = mock(FrameworkMethod.class);
 
         doReturn(dataProviderMethod).when(underTest).getDataProviderMethod(testMethod);
-        doReturn(false).when(underTest).isValidDataProviderMethod(dataProviderMethod);
+        doReturn(false).when(underTest).isValidDataProvider(dataProviderMethod);
 
         // When:
         List<FrameworkMethod> result = underTest.generateExplodedTestMethodsFor(asList(testMethod));
@@ -287,7 +287,7 @@ public class DataProviderRunnerTest {
         FrameworkMethod dataProviderMethod = mock(FrameworkMethod.class);
 
         doReturn(dataProviderMethod).when(underTest).getDataProviderMethod(testMethod);
-        doReturn(true).when(underTest).isValidDataProviderMethod(dataProviderMethod);
+        doReturn(true).when(underTest).isValidDataProvider(dataProviderMethod);
 
         List<FrameworkMethod> explodedMethods = new ArrayList<FrameworkMethod>();
         explodedMethods.add(mock(FrameworkMethod.class));
@@ -405,19 +405,19 @@ public class DataProviderRunnerTest {
     }
 
     @Test
-    public void testIsValidDataProviderMethodShouldReturnFalseIfDataProviderMethodIsNull() {
+    public void testisValidDataProviderShouldReturnFalseIfDataProviderMethodIsNull() {
 
         // Given:
 
         // When:
-        boolean result = underTest.isValidDataProviderMethod(null);
+        boolean result = underTest.isValidDataProvider(null);
 
         // Then:
         assertThat(result).isFalse();
     }
 
     @Test
-    public void testIsValidDataProviderMethodShouldReturnFalseIfItIsNotPublic() {
+    public void testisValidDataProviderShouldReturnFalseIfItIsNotPublic() {
 
         // Given:
         FrameworkMethod dataProviderMethod = mock(FrameworkMethod.class);
@@ -425,14 +425,14 @@ public class DataProviderRunnerTest {
         doReturn(getMethod("nonPublicDataProviderMethod")).when(dataProviderMethod).getMethod();
 
         // When:
-        boolean result = underTest.isValidDataProviderMethod(dataProviderMethod);
+        boolean result = underTest.isValidDataProvider(dataProviderMethod);
 
         // Then:
         assertThat(result).isFalse();
     }
 
     @Test
-    public void testIsValidDataProviderMethodShouldReturnFalseIfItIsNotStatic() {
+    public void testisValidDataProviderShouldReturnFalseIfItIsNotStatic() {
 
         // Given:
         FrameworkMethod dataProviderMethod = mock(FrameworkMethod.class);
@@ -440,14 +440,14 @@ public class DataProviderRunnerTest {
         doReturn(getMethod("nonStaticDataProviderMethod")).when(dataProviderMethod).getMethod();
 
         // When:
-        boolean result = underTest.isValidDataProviderMethod(dataProviderMethod);
+        boolean result = underTest.isValidDataProvider(dataProviderMethod);
 
         // Then:
         assertThat(result).isFalse();
     }
 
     @Test
-    public void testIsValidDataProviderMethodShouldReturnFalseIfItRequiresAnyParameter() {
+    public void testisValidDataProviderShouldReturnFalseIfItRequiresAnyParameter() {
 
         // Given:
         FrameworkMethod dataProviderMethod = mock(FrameworkMethod.class);
@@ -455,14 +455,14 @@ public class DataProviderRunnerTest {
         doReturn(getMethod("nonNoArgDataProviderMethod", Object.class)).when(dataProviderMethod).getMethod();
 
         // When:
-        boolean result = underTest.isValidDataProviderMethod(dataProviderMethod);
+        boolean result = underTest.isValidDataProvider(dataProviderMethod);
 
         // Then:
         assertThat(result).isFalse();
     }
 
     @Test
-    public void testIsValidDataProviderMethodShouldReturnFalseIfItDoesNotReturnObjectArrayArray() {
+    public void testisValidDataProviderShouldReturnFalseIfItDoesNotReturnObjectArrayArray() {
 
         // Given:
         FrameworkMethod dataProviderMethod = mock(FrameworkMethod.class);
@@ -470,14 +470,14 @@ public class DataProviderRunnerTest {
         doReturn(getMethod("nonObjectArrayArrayReturningDataProviderMethod")).when(dataProviderMethod).getMethod();
 
         // When:
-        boolean result = underTest.isValidDataProviderMethod(dataProviderMethod);
+        boolean result = underTest.isValidDataProvider(dataProviderMethod);
 
         // Then:
         assertThat(result).isFalse();
     }
 
     @Test
-    public void testIsValidDataProviderMethodShouldReturnTrueIfItIsPublicStaticNoArgAndReturnsObjectArrayArray() {
+    public void testisValidDataProviderShouldReturnTrueIfItIsPublicStaticNoArgAndReturnsObjectArrayArray() {
 
         // Given:
         FrameworkMethod dataProviderMethod = mock(FrameworkMethod.class);
@@ -485,7 +485,7 @@ public class DataProviderRunnerTest {
         doReturn(getMethod("validDataProviderMethod")).when(dataProviderMethod).getMethod();
 
         // When:
-        boolean result = underTest.isValidDataProviderMethod(dataProviderMethod);
+        boolean result = underTest.isValidDataProvider(dataProviderMethod);
 
         // Then:
         assertThat(result).isTrue();
@@ -603,7 +603,7 @@ public class DataProviderRunnerTest {
         }
     }
 
-    // Methods used to test isValidDataProviderMethod
+    // Methods used to test isValidDataProvider
     static Object[][] nonPublicDataProviderMethod() {
         return null;
     }
