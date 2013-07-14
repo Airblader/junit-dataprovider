@@ -5,7 +5,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.assertj.core.util.VisibleForTesting;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.internal.runners.model.MultipleFailureException;
@@ -31,7 +30,7 @@ import org.junit.runners.model.TestClass;
  */
 public class DataProviderRunner extends BlockJUnit4ClassRunner {
 
-	@VisibleForTesting
+	/** <p>This field is visible for testing</p> */
 	protected DataProviderMethodsList computedTestMethods;
 
     /**
@@ -216,16 +215,17 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
 	}
 
 	/**
-     * Validates test methods and their data providers. This method cannot use the result of
+     * <p>Validates test methods and their data providers. This method cannot use the result of
      * {@link DataProviderRunner#computeTestMethods()} because the method ignores invalid test methods and data
      * providers silently (except if a data provider method cannot be called). However, the common errors are not raised
      * as {@link RuntimeException} to go the JUnit way of detecting errors. This implies that we have to browse the
-     * whole class for test methods and data providers again :-(.
+     * whole class for test methods and data providers again :-(.</p>
+     *
+     * <p><i>Note:</i> This method is visible for testing.</p>
      *
      * @param errors that are added to this list
      * @throws IllegalArgumentException if given {@code errors} is {@code null}
      */
-    @VisibleForTesting
     void validateDataProviderObjects(List<Throwable> errors) {
         if (errors == null) {
             throw new IllegalArgumentException("errors must not be null");
@@ -249,15 +249,16 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
     }
 
     /**
-     * Generates the exploded list of test methods for the given {@code testMethods}. Each of the given
+     * <p>Generates the exploded list of test methods for the given {@code testMethods}. Each of the given
      * {@link FrameworkMethod}s is checked if it uses a {@code @}{@link DataProvider} or not. If yes, for each line of
      * the {@link DataProvider}s {@link Object}{@code [][]} result a specific test method with its parameters (=
-     * {@link Object}{@code []} will be added. If no, the original test method is added.
+     * {@link Object}{@code []} will be added. If no, the original test method is added.</p>
+     *
+     * <p><i>Note:</i> This method is visible for testing.</p>
      *
      * @param testMethods the original test methods
      * @return the exploded list of test methods (never {@code null})
      */
-    @VisibleForTesting
     List<FrameworkMethod> generateExplodedTestMethodsFor(List<FrameworkMethod> testMethods) {
         List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
         if (testMethods == null) {
@@ -281,14 +282,15 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
     }
 
     /**
-     * Returns the data provider method that belongs to the given test method or {@code null} if no such data provider
-     * exists or the test method is not marked for usage of a data provider
+     * <p>Returns the data provider method that belongs to the given test method or {@code null} if no such data provider
+     * exists or the test method is not marked for usage of a data provider.</p>
+     *
+     * <p><i>Note:</i> This method is visible for testing.</p>
      *
      * @param testMethod test method that uses a data provider
      * @return the data provider or {@code null} (if data provider does not exist or test method does not use any)
      * @throws IllegalArgumentException if given {@code testMethod} is {@code null}
      */
-    @VisibleForTesting
     protected FrameworkMethod getDataProviderMethod(FrameworkMethod testMethod) {
         if (testMethod == null) {
             throw new IllegalArgumentException("testMethod must not be null");
@@ -310,14 +312,15 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
     }
 
     /**
-     * Returns the extended data provider class that belongs to the given test method or {@code null} if no such
-     * data provider exists or the test method is not marked for usage of a data provider.
+     * <p>Returns the extended data provider class that belongs to the given test method or {@code null} if no such
+     * data provider exists or the test method is not marked for usage of a data provider.</p>
+     *
+     * <p><i>Note:</i> This method is visible for testing.</p>
      *
      * @param testMethod test method that uses a data provider
      * @return the data provider or {@code null}
      * @throws IllegalArgumentException if given {@code testMethod} is {@code null}
      */
-    @VisibleForTesting
     protected FrameworkField getDataProviderField(FrameworkMethod testMethod) {
     	if (testMethod == null) {
     		throw new IllegalArgumentException("testMethod must not be null");
@@ -338,7 +341,7 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
     	return null;
     }
 
-    @VisibleForTesting
+    /** <p><i>Note:</i> This method is visible for testing.</p> */
     TestClass findDataProviderLocation(UseDataProvider useDataProvider) {
     	if (useDataProvider.location() == null || useDataProvider.location().length == 0) {
             return getTestClassInt();
@@ -357,11 +360,12 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
      * <li>The method must return an {@code Object[][]}</li>
      * </ul>
      *
+     * <p><i>Note:</i> This method is visible for testing.</p>
+     *
      * @param dataProvider the method to check
      * @return true if {@code dataProvider} is a valid data provider, false otherwise or if
      * the argument is {@code null}.
      */
-    @VisibleForTesting
     protected boolean isValidDataProvider(FrameworkMethod dataProviderMethod) {
     	// @formatter:off
 		return dataProviderMethod != null
@@ -381,11 +385,12 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
      * <li>The field must be static</li>
      * </ul>
      *
+     * <p><i>Note:</i> This method is visible for testing.</p>
+     *
      * @param dataProvider the field to check
      * @return true if {@code dataProvider} is a valid data provider, false otherwise or if
      * the argument is {@code null}.
      */
-    @VisibleForTesting
     protected boolean isValidDataProvider(FrameworkField dataProviderField) {
         // the correctness of the provide method itself is enforced in the data provider class
     	return dataProviderField != null
@@ -399,13 +404,14 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
      * <p>The generic type {@code T} can either be a {@link FrameworkMethod} or {@link FrameworkField},
      * otherwise an {@link IllegalArgumentException} will be thrown.</p>
      *
+     * <p><i>Note:</i> This method is visible for testing.</p>
+     *
      * @param testMethod the original test method
      * @param dataProvider the data provider method that gives the parameters
      * @return If {@code dataProvider} is an instance of {@link FrameworkMethod} or {@link FrameworkField},
      * a list of methods, each method bound to a parameter combination returned by the data provider, is
      * returned. Otherwise, an {@link IllegalArgumentException} will be thrown.
      */
-    @VisibleForTesting
     protected <T> List<FrameworkMethod> explodeTestMethod(FrameworkMethod testMethod, T dataProvider) {
         Method method = null;
         Object target = null;
@@ -431,7 +437,7 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
         return explodeTestMethod(testMethod, method, target);
     }
 
-    @VisibleForTesting
+    /** <p><i>Note:</i> This method is visible for testing.</p> */
     protected List<FrameworkMethod> explodeTestMethod(FrameworkMethod testMethod, Method dataProvider, Object target) {
         int index = 1;
         List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
@@ -462,19 +468,17 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
         return result;
     }
 
-    /**
-     * <p>This is extracted into a method for testing purposes.</p>
-     */
-    @VisibleForTesting
+    /** <p>This is extracted into a method for testing purposes.</p> */
     protected Object[][] invokeDataProvider(Method dataProvider, Object target) throws Throwable {
         return (Object[][]) dataProvider.invoke(target);
     }
 
     /**
-     * Returns a {@link TestClass} object wrapping the class to be executed. This method is required for testing because
-     * {@link #getTestClass()} is final and therefore cannot be stubbed :(
+     * <p>Returns a {@link TestClass} object wrapping the class to be executed. This method is required for testing because
+     * {@link #getTestClass()} is final and therefore cannot be stubbed :(</p>
+     *
+     * <p><i>Note:</i> This method is visible for testing.</p>
      */
-    @VisibleForTesting
     protected TestClass getTestClassInt() {
         return getTestClass();
     }

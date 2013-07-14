@@ -3,7 +3,6 @@ package com.tngtech.java.junit.dataprovider;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.assertj.core.util.VisibleForTesting;
 import org.junit.runner.Description;
 import org.junit.runner.manipulation.Filter;
 
@@ -13,7 +12,7 @@ import org.junit.runner.manipulation.Filter;
  */
 public class DataProviderFilter extends Filter {
 
-	@VisibleForTesting
+    /** <p><i>Note:</i> This field is visible for testing.</p> */
     static final Pattern DESCRIPTION_PATTERN = Pattern.compile("([^\\[\\] ]+)" + "(\\[(\\d+):.*\\])?" + "\\((.+)\\)$");
 
     private static final int GROUP_METHOD_NAME = 1;
