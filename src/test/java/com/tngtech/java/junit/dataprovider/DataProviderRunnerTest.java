@@ -410,7 +410,7 @@ public class DataProviderRunnerTest {
         // Given:
 
         // When:
-        boolean result = underTest.isValidDataProvider(null);
+        boolean result = underTest.isValidDataProvider((FrameworkMethod) null);
 
         // Then:
         assertThat(result).isFalse();

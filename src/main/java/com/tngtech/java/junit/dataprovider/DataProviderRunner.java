@@ -259,7 +259,7 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
      * @throws IllegalArgumentException if given {@code testMethod} is {@code null}
      */
     @VisibleForTesting
-    FrameworkMethod getDataProviderMethod(FrameworkMethod testMethod) {
+    protected FrameworkMethod getDataProviderMethod(FrameworkMethod testMethod) {
         if (testMethod == null) {
             throw new IllegalArgumentException("testMethod must not be null");
         }
@@ -287,7 +287,8 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
      * @return the data provider or {@code null}
      * @throws IllegalArgumentException if given {@code testMethod} is {@code null}
      */
-    private FrameworkField getDataProviderField(FrameworkMethod testMethod) {
+    @VisibleForTesting
+    protected FrameworkField getDataProviderField(FrameworkMethod testMethod) {
     	if (testMethod == null) {
     		throw new IllegalArgumentException("testMethod must not be null");
     	}
@@ -317,28 +318,14 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
     }
 
     /**
-     * Checks if the given method or field is a valid data provider.
+     * Checks if the given method is a valid data provider.
      * TODO specify what valid means
      *
-     * @param dataProvider the method or field to check
+     * @param dataProvider the method to check
      * @return true if {@code dataProvider} is a valid data provider, false otherwise
      */
     @VisibleForTesting
-    protected <T> boolean isValidDataProvider(T dataProvider) {
-        if (dataProvider == null) {
-            return false;
-        }
-
-        if (dataProvider instanceof FrameworkMethod) {
-            return isValidDataProviderMethod((FrameworkMethod) dataProvider);
-        } else if (dataProvider instanceof FrameworkField) {
-            return isValidDataProviderField((FrameworkField) dataProvider);
-        } else {
-            throw new IllegalArgumentException("dataProvider must be a FrameworkMethod or FrameworkField");
-        }
-    }
-
-    private boolean isValidDataProviderMethod(FrameworkMethod dataProviderMethod) {
+    protected boolean isValidDataProvider(FrameworkMethod dataProviderMethod) {
     	// @formatter:off
 		return dataProviderMethod != null
                 && Modifier.isPublic(dataProviderMethod.getMethod().getModifiers())
@@ -348,7 +335,15 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
         // @formatter:on
     }
 
-    private boolean isValidDataProviderField(FrameworkField dataProviderField) {
+    /**
+     * Checks if the given field is a valid data provider.
+     * TODO specify what valid means
+     *
+     * @param dataProvider the field to check
+     * @return true if {@code dataProvider} is a valid data provider, false otherwise
+     */
+    @VisibleForTesting
+    protected boolean isValidDataProvider(FrameworkField dataProviderField) {
     	if (dataProviderField == null
     			|| !Modifier.isPublic(dataProviderField.getField().getModifiers())
     			|| !Modifier.isStatic(dataProviderField.getField().getModifiers())) {
