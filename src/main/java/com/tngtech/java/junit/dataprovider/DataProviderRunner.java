@@ -398,20 +398,21 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
             throw new IllegalArgumentException("Parameter dataProvider must be a method or field");
         }
 
-        try {
-            return explodeTestMethod(testMethod, method, target);
-        } catch (Throwable t) {
-            throw new Error(String.format("Exception while exploding test method: %s", t.getMessage()), t);
-        }
+        return explodeTestMethod(testMethod, method, target);
     }
 
     @VisibleForTesting
-    protected List<FrameworkMethod> explodeTestMethod(FrameworkMethod testMethod, Method dataProvider, Object target)
-            throws Throwable {
+    protected List<FrameworkMethod> explodeTestMethod(FrameworkMethod testMethod, Method dataProvider, Object target) {
         int index = 1;
         List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
 
-        Object[][] dataProviderMethodResult = invokeDataProvider(dataProvider, target);
+        Object[][] dataProviderMethodResult = null;
+        try {
+            dataProviderMethodResult = invokeDataProvider(dataProvider, target);
+        } catch (Throwable t) {
+            throw new Error(String.format("Exception while exploding test method using data provider '%s': %s",
+                   (dataProvider != null) ? dataProvider.getName() : "<null>", t.getMessage()), t);
+        }
 
         if (dataProviderMethodResult == null) {
             throw new IllegalStateException(String.format("Data provider method '%s' must not return 'null'.",
