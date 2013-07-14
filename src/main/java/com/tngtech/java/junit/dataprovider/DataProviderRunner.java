@@ -102,6 +102,11 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
         }
     }
 
+    /**
+     * <p><i>Note:</i> This method was copied from {@link BlockJUnit4ClassRunner} to add data provider
+     * specific handling.</p>
+     * {@inheritDoc}
+     */
     @Override
 	@SuppressWarnings("deprecation")
 	protected Statement methodBlock(FrameworkMethod method) {
@@ -128,6 +133,11 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
 		return statement;
 	}
 
+    /**
+     * <p><i>Note:</i> This method was copied from {@link BlockJUnit4ClassRunner} as it is marked
+     * {@code private} and could not be referenced otherwise.</p>
+     * {@inheritDoc}
+     */
 	private Statement withRules(FrameworkMethod method, Object target, Statement statement) {
 		Statement result = statement;
 		for (MethodRule each : getTestClass().getAnnotatedFieldValues(target, Rule.class, MethodRule.class)) {
@@ -137,6 +147,18 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
 		return result;
 	}
 
+	/**
+	 * <p>Adds data provider specific handling to a given statement by executing calls of
+	 * {@code beforeAll}, {@code beforeEach}, {@code afterEach} and {@code afterAll} in the
+	 * proper order if needed.</p>
+	 * <p>If there is no data provider field for the given {@code method}, the statement will
+	 * be returned untouched.</p>
+	 *
+	 * @param method
+	 * @param statement
+	 * @return The modified statement or just {@code statement} if {@code method} has no valid
+	 * data provider field corresponding to it.
+	 */
 	private Statement withDataProviderMethods(final FrameworkMethod method, final Statement statement) {
 		final FrameworkField dataProvider = getDataProviderField(method);
 		if (dataProvider == null) {
@@ -150,16 +172,16 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
 
 			    computedTestMethods.increaseCurrentIndexForMethodName(method);
 			    if (computedTestMethods.getCurrentIndexForMethodName(method) == 1) {
-			        invokeDataProviderMethod(dataProvider, "beforeAll", errors);
+			        invokeFrameworkFieldMethod(dataProvider, "beforeAll", errors);
 			    }
-			    invokeDataProviderMethod(dataProvider, "beforeEach", errors);
+			    invokeFrameworkFieldMethod(dataProvider, "beforeEach", errors);
 
 			    try {
 			        statement.evaluate();
 			    } finally {
-			        invokeDataProviderMethod(dataProvider, "afterEach", errors);
+			        invokeFrameworkFieldMethod(dataProvider, "afterEach", errors);
 			        if (computedTestMethods.isLastRunForMethodName(method)) {
-			            invokeDataProviderMethod(dataProvider, "afterAll", errors);
+			            invokeFrameworkFieldMethod(dataProvider, "afterAll", errors);
 			        }
 			    }
 
@@ -169,16 +191,24 @@ public class DataProviderRunner extends BlockJUnit4ClassRunner {
 	}
 
 	/**
-	 * Invokes a method on a given dataProvider object and returns its output
+	 * <p>Invoke a method on a field by its name.</p>
+	 * <p><i>Note:</i> This method will modify the passed {@code errors} list if any errors occur.</p>
+	 *
+	 * @param field The {@link FrameworkField} to use
+	 * @param methodName Name of the method that should be called
+	 * @param errors A {@link List} of {@link Throwable} that will be modified in case of an exception
+	 * @return The value returned by the called method or {@code null} if {@code dataProvider} was
+	 * {@code null} or if any errors occurred during execution (in this case, the thrown exception will
+	 * be added to {@code errors}
 	 */
-	private Object invokeDataProviderMethod(FrameworkField dataProvider, String methodName, List<Throwable> errors) {
-		if (dataProvider == null) {
+	private Object invokeFrameworkFieldMethod(FrameworkField field, String methodName, List<Throwable> errors) {
+		if (field == null) {
 			return null;
 		}
 
 		try {
-			Class<?> clazz = Class.forName(dataProvider.getField().getType().getName());
-			return clazz.getMethod(methodName, new Class<?>[] {}).invoke(dataProvider.get(clazz));
+			Class<?> clazz = Class.forName(field.getField().getType().getName());
+			return clazz.getMethod(methodName, new Class<?>[] {}).invoke(field.get(clazz));
 		} catch (Throwable t) {
 			errors.add(t);
 			return null;
